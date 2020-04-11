@@ -1,38 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Oneleif.debugconsole
 {
-    public abstract class ConsoleCommand
-    {
-        public abstract string Name { get; protected set; }
-        public abstract string Command { get; protected set; }
-        public abstract string Description { get; protected set; }
-        public abstract string Help { get; protected set; }
-
-        public void AddCommandToConsole()
-        {
-            DeveloperConsole.AddCommandsToConsole(Command, this);
-        }
-
-        public abstract void RunCommand();
-    }
-
     public class DeveloperConsole : MonoBehaviour
     {
-        public static DeveloperConsole Instance { get; private set; }
-        public static Dictionary<string, ConsoleCommand> Commands { get; private set; }
+        [SerializeField] private string prefix = string.Empty;
+        [SerializeField] private ConsoleCommand[] commands = new ConsoleCommand[0];
 
         [Header("UI Components")]
-        public Canvas consoleCanvas;
+        [SerializeField] private Canvas consoleCanvas;
 
-        public Text consoleText;
-        public Text inputText;
-        public InputField consoleInput;
+        [SerializeField] private Text consoleText;
+        [SerializeField] private Text inputText;
+        [SerializeField] private InputField consoleInput;
 
+        #region Singleton
+
+        public static DeveloperConsole Instance { get; private set; }
         private void Awake()
         {
             if (FindObjectsOfType(GetType()).Length > 1)
@@ -50,14 +37,14 @@ namespace Oneleif.debugconsole
                 Instance = this;
             }
             DontDestroyOnLoad(this.gameObject);
-            Commands = new Dictionary<string, ConsoleCommand>();
         }
+
+        #endregion Singleton
 
         private void Start()
         {
             consoleCanvas.gameObject.SetActive(false);
             AddMessageToConsole("Starting Developer Console...");
-            CreateCommands();
         }
 
         private void OnEnable()
@@ -72,29 +59,8 @@ namespace Oneleif.debugconsole
 
         private void HandleLog(string logMessage, string stackTrace, LogType type)
         {
-            string message = string.Empty;
-            if (type.Equals(LogType.Warning))
-            {
-                message = "<color=yellow>[" + type.ToString() + "]" + logMessage + "</color> ";
-            }
-            else
-            {
-                message = "<color=white>[" + type.ToString() + "]" + logMessage + "</color> ";
-            }
-            AddMessageToConsole(message);
-        }
-
-        private void CreateCommands()
-        {
-            CommandQuit.CreateCommand();
-        }
-
-        public static void AddCommandsToConsole(string name, ConsoleCommand command)
-        {
-            if (!Commands.ContainsKey(name))
-            {
-                Commands.Add(name, command);
-            }
+            string color = type.Equals(LogType.Warning) ? "yellow" : "white";
+            AddMessageToConsole("<color=" + color + ">[" + type.ToString() + "]" + logMessage + "</color> ");
         }
 
         private void Update()
@@ -104,16 +70,12 @@ namespace Oneleif.debugconsole
                 consoleCanvas.gameObject.SetActive(!consoleCanvas.gameObject.activeInHierarchy);
             }
 
-            if (consoleCanvas.gameObject.activeInHierarchy)
+            if (consoleCanvas.gameObject.activeInHierarchy && Input.GetKeyDown(KeyCode.Return) && inputText.text != "")
             {
-                if (Input.GetKeyDown(KeyCode.Return))
-                {
-                    if (inputText.text != "")
-                    {
-                        AddMessageToConsole(inputText.text);
-                        ParseInput(inputText.text);
-                    }
-                }
+                AddMessageToConsole(inputText.text);
+                ProcessCommand(inputText.text);
+
+                consoleInput.text = string.Empty;
             }
         }
 
@@ -122,23 +84,43 @@ namespace Oneleif.debugconsole
             consoleText.text += msg + "\n";
         }
 
-        private void ParseInput(string parseInput)
+        public void ProcessCommand(string inputValue)
         {
-            string[] input = parseInput.Split(null);
-
-            if (input.Length == 0 || input == null)
+            if (!inputValue.StartsWith(prefix))
             {
-                Debug.LogWarning("Command not recognized.");
+                Debug.LogWarning("Command not recognized");
                 return;
             }
 
-            if (!Commands.ContainsKey(input[0]))
+            inputValue = inputValue.Remove(0, prefix.Length);
+
+            string[] inputSplit = inputValue.Split(' ');
+
+            string commandInput = inputSplit[0];
+            string[] args = inputSplit.Skip(1).ToArray();
+
+            if (!Array.Exists(commands, command => command.Command.Equals(commandInput, StringComparison.OrdinalIgnoreCase)))
             {
-                Debug.LogWarning("Command not recognized.");
+                Debug.LogWarning("Command not recognized");
+                return;
             }
-            else
+
+            ProcessCommand(commandInput, args);
+        }
+
+        public void ProcessCommand(string commandInput, string[] args)
+        {
+            foreach (var command in commands)
             {
-                Commands[input[0]].RunCommand();
+                if (!commandInput.Equals(command.Command, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (command.Process(args))
+                {
+                    return;
+                }
             }
         }
     }
