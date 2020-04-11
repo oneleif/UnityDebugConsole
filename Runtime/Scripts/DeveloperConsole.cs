@@ -68,6 +68,7 @@ namespace Oneleif.debugconsole
             if (Input.GetKeyDown(KeyCode.BackQuote))
             {
                 consoleCanvas.gameObject.SetActive(!consoleCanvas.gameObject.activeInHierarchy);
+                SetupInputField();
             }
 
             if (consoleCanvas.gameObject.activeInHierarchy && Input.GetKeyDown(KeyCode.Return) && inputText.text != "")
@@ -75,13 +76,19 @@ namespace Oneleif.debugconsole
                 AddMessageToConsole(inputText.text);
                 ProcessCommand(inputText.text);
 
-                consoleInput.text = string.Empty;
+                SetupInputField();
             }
         }
 
         private void AddMessageToConsole(string msg)
         {
             consoleText.text += msg + "\n";
+        }
+        private void SetupInputField()
+        {
+            consoleInput.text = string.Empty;
+            consoleInput.Select();
+            consoleInput.ActivateInputField();
         }
 
         public void ProcessCommand(string inputValue)
