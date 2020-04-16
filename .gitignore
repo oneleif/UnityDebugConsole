@@ -1,10 +1,10 @@
-/[Ll]ibrary/
-/[Tt]emp/
-/[Oo]bj/
-/[Bb]uild/
-/[Bb]uilds/
-/[Ll]ogs/
-/[Uu]ser[Ss]ettings/
+UnityDebugConsole/[Ll]ibrary/
+UnityDebugConsole/[Tt]emp/
+UnityDebugConsole/[Oo]bj/
+UnityDebugConsole/[Bb]uild/
+UnityDebugConsole/[Bb]uilds/
+UnityDebugConsole/[Ll]ogs/
+UnityDebugConsole/[Uu]ser[Ss]ettings/
 
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
