@@ -13,8 +13,8 @@ namespace Oneleif.debugconsole
             {
 #if UNITY_EDITOR
                 UnityEditor.EditorApplication.isPlaying = false;
-                return true;
 #endif
+                return true;
             }
             else
             {
