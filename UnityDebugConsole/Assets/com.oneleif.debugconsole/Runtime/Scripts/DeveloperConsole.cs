@@ -10,6 +10,7 @@ namespace Oneleif.debugconsole
     {
         [Header("Options")]
         public KeyCode toggleKey = KeyCode.BackQuote;
+
         public bool shouldLogToFile = false;
         public bool shouldOutputDebugLogs = false;
         [SerializeField] private string commandPrefix = string.Empty;
@@ -28,6 +29,7 @@ namespace Oneleif.debugconsole
 
         // Constants
         private string logFilePath;
+
         private string logFileName = "log.txt";
         private bool addTimestamp = true;
 
@@ -75,7 +77,6 @@ namespace Oneleif.debugconsole
             if (shouldOutputDebugLogs)
             {
                 Application.logMessageReceived += HandleLog;
-
             }
         }
 
@@ -99,14 +100,16 @@ namespace Oneleif.debugconsole
             switch (type)
             {
                 case LogType.Error:
-                    color = "red";
-                    break;
+                color = "red";
+                break;
+
                 case LogType.Warning:
-                    color = "yellow";
-                    break;
+                color = "yellow";
+                break;
+
                 case LogType.Log:
-                    color = "white";
-                    break;
+                color = "white";
+                break;
             }
 
             LogMessage("<color=" + color + ">[" + type.ToString() + "]" + logMessage + "</color> ");
@@ -153,24 +156,25 @@ namespace Oneleif.debugconsole
         }
         private void SetupInputField()
         {
-            consoleInput.text = string.Empty;
-            consoleInput.Select();
+            ClearInputField(consoleInput);
 
             consoleInput.onEndEdit.RemoveAllListeners();
-            consoleInput.onEndEdit.AddListener(delegate { ProcessCommand(consoleInput); });
+            consoleInput.onEndEdit.AddListener(delegate
+            { ProcessCommand(consoleInput); });
 
             consoleInput.onValueChanged.RemoveAllListeners();
-            consoleInput.onValueChanged.AddListener(delegate { ShowCommandAutoComplete(consoleInput); });
+            consoleInput.onValueChanged.AddListener(delegate
+            { ShowCommandAutoComplete(consoleInput); });
         }
 
         public void ShowCommandAutoComplete(InputField consoleInput)
         {
-
         }
 
         public void ProcessCommand(InputField consoleInput)
         {
             string inputValue = consoleInput.text;
+            ClearInputField(consoleInput);
 
             // Print the user's input
             LogMessage(userInputPrefix + inputValue);
@@ -213,6 +217,12 @@ namespace Oneleif.debugconsole
                     return;
                 }
             }
+        }
+        private void ClearInputField(InputField consoleInput)
+        {
+            consoleInput.text = string.Empty;
+            consoleInput.Select();
+            consoleInput.ActivateInputField();
         }
     }
 }
