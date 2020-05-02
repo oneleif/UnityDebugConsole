@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1608076839}
   - component: {fileID: 1608076841}
   m_Layer: 0
-  m_Name: Text
+  m_Name: ContentLogText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -142,13 +142,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5ad54dd9a9e4474e8498f30022a0b51, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefix: /
+  toggleKey: 96
+  shouldLogToFile: 0
+  shouldOutputDebugLogs: 0
+  commandPrefix: 
+  userInputPrefix: '> '
   commands:
   - {fileID: 11400000, guid: 8136e2a13fd44af4282dd7b06a21feae, type: 2}
   consoleCanvas: {fileID: 3016797085147515044}
   consoleText: {fileID: 1608076839}
   inputText: {fileID: 3016797085847236795}
   consoleInput: {fileID: 3016797086186141066}
+  resultsParent: {fileID: 0}
+  prefab: {fileID: 0}
 --- !u!1 &3016797084923790195
 GameObject:
   m_ObjectHideFlags: 0
@@ -518,7 +524,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3016797086480675205}
   m_HandleRect: {fileID: 3016797086480675206}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -572,7 +578,7 @@ GameObject:
   - component: {fileID: 3016797085847236794}
   - component: {fileID: 3016797085847236795}
   m_Layer: 0
-  m_Name: Text
+  m_Name: InputFieldText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1011,7 +1017,7 @@ GameObject:
   - component: {fileID: 3016797086391582732}
   - component: {fileID: 3016797086391582733}
   m_Layer: 0
-  m_Name: Text
+  m_Name: SubmitText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

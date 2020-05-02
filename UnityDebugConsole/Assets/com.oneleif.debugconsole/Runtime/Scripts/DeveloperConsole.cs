@@ -24,6 +24,9 @@ namespace Oneleif.debugconsole
         [SerializeField] private Text inputText;
         [SerializeField] private InputField consoleInput;
 
+        [SerializeField] private RectTransform resultsParent;
+        [SerializeField] private RectTransform prefab;
+
         // Console props
         private bool consoleIsActive = false;
 
@@ -169,6 +172,8 @@ namespace Oneleif.debugconsole
 
         public void ShowCommandAutoComplete(InputField consoleInput)
         {
+            //ClearResults();
+            //FillResults(commands);
         }
 
         public void ProcessCommand(InputField consoleInput)
@@ -223,6 +228,26 @@ namespace Oneleif.debugconsole
             consoleInput.text = string.Empty;
             consoleInput.Select();
             consoleInput.ActivateInputField();
+        }
+
+        private void ClearResults()
+        {
+            for (int childIndex = resultsParent.childCount - 1; childIndex >= 0; --childIndex)
+            {
+                Transform child = resultsParent.GetChild(childIndex);
+                child.SetParent(null);
+                Destroy(child.gameObject);
+            }
+        }
+
+        private void FillResults(ConsoleCommand[] results)
+        {
+            for (int resultIndex = 0; resultIndex < results.Length; resultIndex++)
+            {
+                RectTransform child = Instantiate(prefab) as RectTransform;
+                child.GetComponentInChildren<Text>().text = results[resultIndex].Command;
+                child.SetParent(resultsParent);
+            }
         }
     }
 }
