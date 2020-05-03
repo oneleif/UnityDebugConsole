@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -18,20 +19,25 @@ namespace Oneleif.debugconsole
 
         [Header("UI Components")]
         [SerializeField] private Canvas consoleCanvas;
-
         [SerializeField] private Text consoleText;
-        [SerializeField] private Text inputText;
         [SerializeField] private InputField consoleInput;
 
         // Console props
         private bool consoleIsActive = false;
 
         // Constants
-        private string logFilePath;
         private string logFileName = "log.txt";
         private bool addTimestamp = true;
 
         private StreamWriter OutputStream;
+
+        private List<string> cachedCommands;
+        private int currentCacheIndex;
+
+        enum CacheDirection
+        {
+            up, down
+        }
 
         #region Singleton
 
@@ -60,6 +66,7 @@ namespace Oneleif.debugconsole
         private void Start()
         {
             consoleCanvas.gameObject.SetActive(consoleIsActive);
+            cachedCommands = new List<string>();
 
             if (shouldLogToFile)
             {
@@ -118,13 +125,34 @@ namespace Oneleif.debugconsole
             {
                 ToggleConsole();
             }
+
+            if (consoleIsActive)
+            {
+                if (Input.GetKeyDown(KeyCode.UpArrow))
+                {
+                    MoveCache(CacheDirection.up);
+                }
+
+                if (Input.GetKeyDown(KeyCode.DownArrow))
+                {
+                    MoveCache(CacheDirection.down);
+                }
+            }
         }
 
         private void ToggleConsole()
         {
             consoleIsActive = !consoleIsActive;
             consoleCanvas.gameObject.SetActive(consoleIsActive);
-            SetupInputField();
+            if (consoleIsActive)
+            {
+                currentCacheIndex = cachedCommands.Count;
+                SetupInputField();
+            }
+            else
+            {
+                consoleInput.DeactivateInputField();
+            }
         }
 
         private void LogMessage(string message)
@@ -151,10 +179,12 @@ namespace Oneleif.debugconsole
                 OutputStream.Flush();
             }
         }
+        
         private void SetupInputField()
         {
             consoleInput.text = string.Empty;
             consoleInput.Select();
+            consoleInput.ActivateInputField();
 
             consoleInput.onEndEdit.RemoveAllListeners();
             consoleInput.onEndEdit.AddListener(delegate { ProcessCommand(consoleInput); });
@@ -171,6 +201,11 @@ namespace Oneleif.debugconsole
         public void ProcessCommand(InputField consoleInput)
         {
             string inputValue = consoleInput.text;
+
+            if(inputValue.Contains("`"))
+            {
+                return;
+            }
 
             // Print the user's input
             LogMessage(userInputPrefix + inputValue);
@@ -193,10 +228,19 @@ namespace Oneleif.debugconsole
             if (!Array.Exists(commands, command => command.Command.Equals(commandInput, StringComparison.OrdinalIgnoreCase)))
             {
                 Debug.LogWarning("Command not recognized");
-                return;
+            }
+            else
+            {
+                ProcessCommand(commandInput, commandArguments);
             }
 
-            ProcessCommand(commandInput, commandArguments);
+
+            // Add command to cache and reset the field
+            cachedCommands.Add(inputValue);
+            currentCacheIndex = cachedCommands.Count;
+            consoleInput.text = string.Empty;
+            consoleInput.ActivateInputField();
+            consoleInput.Select();
         }
 
         public void ProcessCommand(string commandInput, string[] args)
@@ -212,6 +256,34 @@ namespace Oneleif.debugconsole
                 {
                     return;
                 }
+            }
+        }
+
+
+        private void MoveCache(CacheDirection direction)
+        {
+            if(cachedCommands.Count > 0)
+            {
+                if (direction == CacheDirection.up)
+                {
+                    if (currentCacheIndex > 0)
+                    {
+                        currentCacheIndex--;
+                        consoleInput.text = cachedCommands[currentCacheIndex];
+
+                    }
+                }
+                else if (direction == CacheDirection.down)
+                {
+                    if (currentCacheIndex < cachedCommands.Count - 1)
+                    {
+                        currentCacheIndex++;
+                        consoleInput.text = cachedCommands[currentCacheIndex];
+
+                    }
+                }
+
+
             }
         }
     }
