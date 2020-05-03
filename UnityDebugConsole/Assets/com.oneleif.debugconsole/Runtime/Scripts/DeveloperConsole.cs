@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -172,8 +173,7 @@ namespace Oneleif.debugconsole
 
         public void ShowCommandAutoComplete(InputField consoleInput)
         {
-            //ClearResults();
-            //FillResults(commands);
+            FillResults(commands, consoleInput);
         }
 
         public void ProcessCommand(InputField consoleInput)
@@ -240,14 +240,33 @@ namespace Oneleif.debugconsole
             }
         }
 
-        private void FillResults(ConsoleCommand[] results)
+        private void FillResults(ConsoleCommand[] commands, InputField consoleInput)
         {
-            for (int resultIndex = 0; resultIndex < results.Length; resultIndex++)
+            for (int resultIndex = 0; resultIndex < commands.Length; resultIndex++)
             {
-                RectTransform child = Instantiate(prefab) as RectTransform;
-                child.GetComponentInChildren<Text>().text = results[resultIndex].Command;
-                child.SetParent(resultsParent);
+                if (!string.IsNullOrEmpty(consoleInput.text) && commands[resultIndex].Command.StartsWith(consoleInput.text))
+                {
+                    RectTransform autoCompleteObject = Instantiate(prefab) as RectTransform;
+                    autoCompleteObject.GetComponentInChildren<Text>().text = commands[resultIndex].Command;
+                    autoCompleteObject.SetParent(resultsParent);
+                    autoCompleteObject.gameObject.transform.localScale = new Vector3(1, 1, 1);
+                }
+                else
+                {
+                    ClearResults();
+                }
+            }
+        }
+        private bool IsAutoCompleteSuggestionInScene()
+        {
+            for (int resultIndex = 0; resultIndex < commands.Length; resultIndex++)
+            {
+                foreach (Text methodName in resultsParent.GetComponentsInChildren<Text>())
+                {
+                    if (methodName.Equals())
+                    {
+                    }
+                }
             }
         }
     }
-}
