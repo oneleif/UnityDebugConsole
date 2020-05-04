@@ -9,9 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6a9fea6617f84a444a97d6f3ce6f403b, type: 3}
-  m_Name: QuitCommand
+  m_Script: {fileID: 11500000, guid: b951e1f1fa1f0cd49b3c48be2ff07558, type: 3}
+  m_Name: New Echo Command
   m_EditorClassIdentifier: 
-  command: quit
-  description: Closes app.
-  help: Quit app.
+  command: echo
+  description: print user input to console

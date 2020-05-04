@@ -9,35 +9,17 @@ namespace Oneleif.debugconsole
 {
     public class DeveloperConsole : MonoBehaviour
     {
-        [Header("Options")]
-        public KeyCode toggleKey = KeyCode.BackQuote;
-
-        public bool shouldLogToFile = false;
-        public bool shouldOutputDebugLogs = false;
-        [SerializeField] private string commandPrefix = string.Empty;
-        [SerializeField] private string userInputPrefix = "> ";
-        [SerializeField] private ConsoleCommand[] commands = new ConsoleCommand[0];
+        [SerializeField] public ConsoleCommand[] commands;
 
         [Header("UI Components")]
         [SerializeField] private Canvas consoleCanvas;
-
         [SerializeField] private Text consoleText;
-        [SerializeField] private Text inputText;
         [SerializeField] private InputField consoleInput;
 
-        [SerializeField] private RectTransform resultsParent;
-        [SerializeField] private RectTransform prefab;
-
-        // Console props
         private bool consoleIsActive = false;
 
-        // Constants
-        private string logFilePath;
-
-        private string logFileName = "log.txt";
-        private bool addTimestamp = true;
-
-        private StreamWriter OutputStream;
+        private AutoComplete autoComplete;
+        private FileLogger fileLogger;
 
         #region Singleton
 
@@ -66,19 +48,13 @@ namespace Oneleif.debugconsole
         private void Start()
         {
             consoleCanvas.gameObject.SetActive(consoleIsActive);
-
-            if (shouldLogToFile)
-            {
-                // Outputs to: C:\Users\<your-user>\AppData\LocalLow\DefaultCompany\UnityDebugConsole\log.txt
-                string logFilePath = Path.Combine(Application.persistentDataPath, logFileName);
-                OutputStream = new StreamWriter(logFilePath, false);
-                // TODO: clear old log files if they're too big
-            }
+            autoComplete = GetComponentInChildren<AutoComplete>();
+            fileLogger = GetComponent<FileLogger>();
         }
 
         private void OnEnable()
         {
-            if (shouldOutputDebugLogs)
+            if (ConsoleConstants.shouldOutputDebugLogs)
             {
                 Application.logMessageReceived += HandleLog;
             }
@@ -86,16 +62,10 @@ namespace Oneleif.debugconsole
 
         private void OnDisable()
         {
-            if (shouldOutputDebugLogs)
+            if (ConsoleConstants.shouldOutputDebugLogs)
             {
                 Application.logMessageReceived -= HandleLog;
             }
-        }
-
-        private void OnDestroy()
-        {
-            OutputStream.Close();
-            OutputStream = null;
         }
 
         private void HandleLog(string logMessage, string stackTrace, LogType type)
@@ -104,16 +74,16 @@ namespace Oneleif.debugconsole
             switch (type)
             {
                 case LogType.Error:
-                color = "red";
-                break;
+                    color = "red";
+                    break;
 
                 case LogType.Warning:
-                color = "yellow";
-                break;
+                    color = "yellow";
+                    break;
 
                 case LogType.Log:
-                color = "white";
-                break;
+                    color = "white";
+                    break;
             }
 
             LogMessage("<color=" + color + ">[" + type.ToString() + "]" + logMessage + "</color> ");
@@ -121,7 +91,7 @@ namespace Oneleif.debugconsole
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.BackQuote))
+            if (Input.GetKeyDown(ConsoleConstants.toggleKey))
             {
                 ToggleConsole();
             }
@@ -137,27 +107,10 @@ namespace Oneleif.debugconsole
         private void LogMessage(string message)
         {
             consoleText.text += message + "\n";
-
-            if (shouldLogToFile)
-            {
-                LogToFile(message);
-            }
+            fileLogger.LogToFile(message);
         }
 
-        private void LogToFile(string message)
-        {
-            if (addTimestamp)
-            {
-                DateTime now = DateTime.Now;
-                message = string.Format("[{0:H:mm:ss}] {1}", now, message);
-            }
-
-            if (OutputStream != null)
-            {
-                OutputStream.WriteLine(message);
-                OutputStream.Flush();
-            }
-        }
+        
         private void SetupInputField()
         {
             ClearInputField(consoleInput);
@@ -173,55 +126,47 @@ namespace Oneleif.debugconsole
 
         public void ShowCommandAutoComplete(InputField consoleInput)
         {
-            FillResults(commands, consoleInput);
+            autoComplete.FillResults(consoleInput);
         }
 
         public void ProcessCommand(InputField consoleInput)
         {
-            string inputValue = consoleInput.text;
+            (ConsoleCommand command, string[] args) = GetCommandFromInput(consoleInput.text);
+            LogMessage(ConsoleConstants.commandPrefix + consoleInput.text);
             ClearInputField(consoleInput);
-
-            // Print the user's input
-            LogMessage(userInputPrefix + inputValue);
-
-            if (!inputValue.StartsWith(commandPrefix))
+            if (command != null)
+            {
+                command.Process(args);
+            }
+            else
             {
                 Debug.LogWarning("Command not recognized");
-                return;
             }
+        }
 
-            // Remove prefix from the command string
-            inputValue = inputValue.Remove(0, commandPrefix.Length);
-
+        private (ConsoleCommand, string[]) GetCommandFromInput(string input)
+        {
             // Split command from arguments
-            string[] inputSplit = inputValue.Split(' ');
+            string[] inputSplit = input.Split(' ');
 
             string commandInput = inputSplit[0];
             string[] commandArguments = inputSplit.Skip(1).ToArray();
 
-            if (!Array.Exists(commands, command => command.Command.Equals(commandInput, StringComparison.OrdinalIgnoreCase)))
-            {
-                Debug.LogWarning("Command not recognized");
-                return;
-            }
-
-            ProcessCommand(commandInput, commandArguments);
+            ConsoleCommand command = GetValidCommand(commandInput);
+            return (command, commandArguments);
         }
 
-        public void ProcessCommand(string commandInput, string[] args)
+        public ConsoleCommand GetValidCommand(string inputCommand)
         {
             foreach (var command in commands)
             {
-                if (!commandInput.Equals(command.Command, StringComparison.OrdinalIgnoreCase))
+                if(command.Command == inputCommand)
                 {
-                    continue;
-                }
-
-                if (command.Process(args))
-                {
-                    return;
+                    return command;
                 }
             }
+
+            return null;
         }
         private void ClearInputField(InputField consoleInput)
         {
@@ -229,44 +174,5 @@ namespace Oneleif.debugconsole
             consoleInput.Select();
             consoleInput.ActivateInputField();
         }
-
-        private void ClearResults()
-        {
-            for (int childIndex = resultsParent.childCount - 1; childIndex >= 0; --childIndex)
-            {
-                Transform child = resultsParent.GetChild(childIndex);
-                child.SetParent(null);
-                Destroy(child.gameObject);
-            }
-        }
-
-        private void FillResults(ConsoleCommand[] commands, InputField consoleInput)
-        {
-            for (int resultIndex = 0; resultIndex < commands.Length; resultIndex++)
-            {
-                if (!string.IsNullOrEmpty(consoleInput.text) && commands[resultIndex].Command.StartsWith(consoleInput.text))
-                {
-                    RectTransform autoCompleteObject = Instantiate(prefab) as RectTransform;
-                    autoCompleteObject.GetComponentInChildren<Text>().text = commands[resultIndex].Command;
-                    autoCompleteObject.SetParent(resultsParent);
-                    autoCompleteObject.gameObject.transform.localScale = new Vector3(1, 1, 1);
-                }
-                else
-                {
-                    ClearResults();
-                }
-            }
-        }
-        private bool IsAutoCompleteSuggestionInScene()
-        {
-            for (int resultIndex = 0; resultIndex < commands.Length; resultIndex++)
-            {
-                foreach (Text methodName in resultsParent.GetComponentsInChildren<Text>())
-                {
-                    if (methodName.Equals())
-                    {
-                    }
-                }
-            }
-        }
     }
+}
