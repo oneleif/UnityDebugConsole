@@ -279,12 +279,17 @@ namespace Oneleif.debugconsole
                     {
                         currentCacheIndex++;
                         consoleInput.text = cachedCommands[currentCacheIndex];
-
+                    }
+                    else
+                    {
+                        consoleInput.text = string.Empty;
                     }
                 }
-
-
             }
+
+            consoleInput.ActivateInputField();
+            consoleInput.Select();
+            consoleInput.MoveTextEnd(false);
         }
     }
 }
