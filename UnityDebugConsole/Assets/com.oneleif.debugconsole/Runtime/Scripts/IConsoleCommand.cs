@@ -6,7 +6,5 @@
         string Description { get; }
 
         void Process(string[] args);
-
-        
     }
 }

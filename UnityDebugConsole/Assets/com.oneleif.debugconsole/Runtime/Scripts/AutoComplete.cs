@@ -11,9 +11,19 @@ namespace Oneleif.debugconsole
         [SerializeField] private RectTransform autoCompleteItemPrefab;
         [SerializeField] private RectTransform autocompleteScrollView;
 
+        public List<AutoCompleteItem> autoCompleteItems;
+        public int selectionIndex;
+
         void Start()
         {
             autocompleteScrollView.gameObject.SetActive(false);
+            autoCompleteItems = new List<AutoCompleteItem>();
+            selectionIndex = 0;
+        }
+
+        public string GetAutoCompleteCommand()
+        {
+            return autoCompleteItems[selectionIndex].ConsoleCommand.Command;
         }
 
         public void ClearResults()
@@ -24,6 +34,8 @@ namespace Oneleif.debugconsole
             }
 
             autocompleteScrollView.gameObject.SetActive(false);
+            autoCompleteItems = new List<AutoCompleteItem>();
+            selectionIndex = 0;
         }
 
         public void FillResults(InputField consoleInput)
@@ -45,15 +57,52 @@ namespace Oneleif.debugconsole
                     foundValidCommand = true;
                     RectTransform autoCompleteItem = Instantiate(autoCompleteItemPrefab, autocompleteParent) as RectTransform;
                     AutoCompleteItem item = autoCompleteItem.GetComponent<AutoCompleteItem>();
-                    item.SetCommandText(command.Command);
-                    item.SetCommandDescriptionText(command.Description);
+                    item.ConsoleCommand = command;
+                    autoCompleteItems.Add(item);
                 }
             }
 
             if (foundValidCommand)
             {
                 autocompleteScrollView.gameObject.SetActive(true);
+                HighlightSelection();
             }
+        }
+
+        public bool AutoCompleteHasItems()
+        {
+            return autoCompleteItems.Count > 0;
+        }
+
+        public void SelectResult(SelectionDirection direction)
+        {
+            UnhighlightSelection();
+
+            if (direction == SelectionDirection.up)
+            {
+                if(selectionIndex > 0)
+                {
+                    selectionIndex--;
+                }
+            }else if(direction == SelectionDirection.down)
+            {
+                if (selectionIndex < autoCompleteItems.Count - 1)
+                {
+                    selectionIndex++;
+                }
+            }
+
+            HighlightSelection();
+        }
+
+        private void UnhighlightSelection()
+        {
+            autoCompleteItems[selectionIndex].Unhighlight();
+        }
+
+        private void HighlightSelection()
+        {
+            autoCompleteItems[selectionIndex].Highlight();
         }
     }
 }

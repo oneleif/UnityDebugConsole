@@ -1,47 +1,48 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-public class FileLogger : MonoBehaviour
+namespace Oneleif.debugconsole
 {
-    private StreamWriter OutputStream;
-
-    private void Start()
+    public class FileLogger : MonoBehaviour
     {
-        if (ConsoleConstants.shouldLogToFile)
+        private StreamWriter OutputStream;
+
+        private void Start()
         {
-            // Outputs to: C:\Users\<your-user>\AppData\LocalLow\DefaultCompany\UnityDebugConsole\log.txt
-            string logFilePath = Path.Combine(Application.persistentDataPath, ConsoleConstants.fileLoggerFileName);
-            OutputStream = new StreamWriter(logFilePath, false);
-            // TODO: clear old log files if they're too big
-        }
-    }
-
-    private void OnDestroy()
-    {
-        OutputStream.Close();
-        OutputStream = null;
-    }
-
-    public void LogToFile(string message)
-    {
-        if (!ConsoleConstants.shouldLogToFile)
-        {
-            return;
+            if (ConsoleConstants.shouldLogToFile)
+            {
+                // Outputs to: C:\Users\<your-user>\AppData\LocalLow\DefaultCompany\UnityDebugConsole\log.txt
+                string logFilePath = Path.Combine(Application.persistentDataPath, ConsoleConstants.fileLoggerFileName);
+                OutputStream = new StreamWriter(logFilePath, false);
+                // TODO: clear old log files if they're too big
+            }
         }
 
-        if (ConsoleConstants.fileLoggerAddTimestamp)
+        private void OnDestroy()
         {
-            DateTime now = DateTime.Now;
-            message = string.Format("[{0:H:mm:ss}] {1}", now, message);
+            OutputStream.Close();
+            OutputStream = null;
         }
 
-        if (OutputStream != null)
+        public void LogToFile(string message)
         {
-            OutputStream.WriteLine(message);
-            OutputStream.Flush();
+            if (!ConsoleConstants.shouldLogToFile)
+            {
+                return;
+            }
+
+            if (ConsoleConstants.fileLoggerAddTimestamp)
+            {
+                DateTime now = DateTime.Now;
+                message = string.Format("[{0:H:mm:ss}] {1}", now, message);
+            }
+
+            if (OutputStream != null)
+            {
+                OutputStream.WriteLine(message);
+                OutputStream.Flush();
+            }
         }
     }
 }

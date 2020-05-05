@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public interface ICommandArguments
+﻿namespace Oneleif.debugconsole
 {
-    bool ValidateArguments(string[] args);
+    public interface ICommandArguments
+    {
+        bool ValidateArguments(string[] args);
+    }
 }

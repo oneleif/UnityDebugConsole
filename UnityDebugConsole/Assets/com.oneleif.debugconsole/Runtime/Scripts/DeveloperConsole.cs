@@ -7,6 +7,11 @@ using UnityEngine.UI;
 
 namespace Oneleif.debugconsole
 {
+    public enum SelectionDirection
+    {
+        up, down, none
+    }
+
     public class DeveloperConsole : MonoBehaviour
     {
         [SerializeField] public ConsoleCommand[] commands;
@@ -24,10 +29,7 @@ namespace Oneleif.debugconsole
         private List<string> cachedCommands;
         public int currentCacheIndex;
 
-        enum CacheDirection
-        {
-            up, down
-        }
+        
 
         #region Singleton
 
@@ -105,18 +107,44 @@ namespace Oneleif.debugconsole
                 ToggleConsole();
             }
 
-            if (consoleIsActive)
+            if (!consoleIsActive)
             {
-                if (Input.GetKeyDown(KeyCode.UpArrow))
-                {
-                    MoveCache(CacheDirection.up);
-                }
+                return;
+            }
 
-                if (Input.GetKeyDown(KeyCode.DownArrow))
+            SelectionDirection inputSelectionDirection = GetInputSelectionDirection();
+            if(inputSelectionDirection != SelectionDirection.none)
+            {
+                if (autoComplete.AutoCompleteHasItems())
                 {
-                    MoveCache(CacheDirection.down);
+                    autoComplete.SelectResult(inputSelectionDirection);
+                }
+                else
+                {
+                    MoveCache(inputSelectionDirection);
                 }
             }
+
+            if (Input.GetKeyDown(KeyCode.Tab))
+            {
+                consoleInput.text = autoComplete.GetAutoCompleteCommand();
+                consoleInput.MoveTextEnd(false);
+            }
+        }
+
+        private SelectionDirection GetInputSelectionDirection()
+        {
+            if (Input.GetKeyDown(KeyCode.UpArrow))
+            {
+                return SelectionDirection.up;
+            }
+
+            if (Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                return SelectionDirection.down;
+            }
+
+            return SelectionDirection.none;
         }
 
         private void ToggleConsole()
@@ -211,11 +239,11 @@ namespace Oneleif.debugconsole
             return null;
         }
 
-        private void MoveCache(CacheDirection direction)
+        private void MoveCache(SelectionDirection direction)
         {
             if(cachedCommands.Count > 0)
             {
-                if (direction == CacheDirection.up)
+                if (direction == SelectionDirection.up)
                 {
                     if (currentCacheIndex > 0)
                     {
@@ -227,7 +255,7 @@ namespace Oneleif.debugconsole
                         consoleInput.text = cachedCommands[currentCacheIndex];
                     }
                 }
-                else if (direction == CacheDirection.down)
+                else if (direction == SelectionDirection.down)
                 {
                     if (currentCacheIndex < cachedCommands.Count - 1)
                     {
