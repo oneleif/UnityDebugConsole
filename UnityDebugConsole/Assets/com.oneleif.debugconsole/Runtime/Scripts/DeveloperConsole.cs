@@ -21,6 +21,14 @@ namespace Oneleif.debugconsole
         private AutoComplete autoComplete;
         private FileLogger fileLogger;
 
+        private List<string> cachedCommands;
+        private int currentCacheIndex;
+
+        enum CacheDirection
+        {
+            up, down
+        }
+
         #region Singleton
 
         public static DeveloperConsole Instance { get; private set; }
@@ -50,6 +58,7 @@ namespace Oneleif.debugconsole
             consoleCanvas.gameObject.SetActive(consoleIsActive);
             autoComplete = GetComponentInChildren<AutoComplete>();
             fileLogger = GetComponent<FileLogger>();
+            cachedCommands = new List<string>();
         }
 
         private void OnEnable()
@@ -95,13 +104,34 @@ namespace Oneleif.debugconsole
             {
                 ToggleConsole();
             }
+
+            if (consoleIsActive)
+            {
+                if (Input.GetKeyDown(KeyCode.UpArrow))
+                {
+                    MoveCache(CacheDirection.up);
+                }
+
+                if (Input.GetKeyDown(KeyCode.DownArrow))
+                {
+                    MoveCache(CacheDirection.down);
+                }
+            }
         }
 
         private void ToggleConsole()
         {
             consoleIsActive = !consoleIsActive;
             consoleCanvas.gameObject.SetActive(consoleIsActive);
-            SetupInputField();
+            if (consoleIsActive)
+            {
+                currentCacheIndex = cachedCommands.Count;
+                SetupInputField();
+            }
+            else
+            {
+                consoleInput.DeactivateInputField();
+            }
         }
 
         private void LogMessage(string message)
@@ -110,10 +140,12 @@ namespace Oneleif.debugconsole
             fileLogger.LogToFile(message);
         }
 
-        
         private void SetupInputField()
         {
             ClearInputField(consoleInput);
+            consoleInput.text = string.Empty;
+            consoleInput.Select();
+            consoleInput.ActivateInputField();
 
             consoleInput.onEndEdit.RemoveAllListeners();
             consoleInput.onEndEdit.AddListener(delegate
@@ -173,6 +205,39 @@ namespace Oneleif.debugconsole
             consoleInput.text = string.Empty;
             consoleInput.Select();
             consoleInput.ActivateInputField();
+        }
+
+
+        private void MoveCache(CacheDirection direction)
+        {
+            if(cachedCommands.Count > 0)
+            {
+                if (direction == CacheDirection.up)
+                {
+                    if (currentCacheIndex > 0)
+                    {
+                        currentCacheIndex--;
+                        consoleInput.text = cachedCommands[currentCacheIndex];
+
+                    }
+                }
+                else if (direction == CacheDirection.down)
+                {
+                    if (currentCacheIndex < cachedCommands.Count - 1)
+                    {
+                        currentCacheIndex++;
+                        consoleInput.text = cachedCommands[currentCacheIndex];
+                    }
+                    else
+                    {
+                        consoleInput.text = string.Empty;
+                    }
+                }
+            }
+
+            consoleInput.ActivateInputField();
+            consoleInput.Select();
+            consoleInput.MoveTextEnd(false);
         }
     }
 }
