@@ -27,7 +27,7 @@ namespace Oneleif.debugconsole
         private FileLogger fileLogger;
 
         private List<string> cachedCommands;
-        public int currentCacheIndex;
+        private int currentCacheIndex;
 
         
 

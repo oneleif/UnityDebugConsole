@@ -454,6 +454,8 @@ MonoBehaviour:
   autoCompleteItemPrefab: {fileID: 5841348260985438925, guid: e2edb3839f4f6904892feab19943d2b4,
     type: 3}
   autocompleteScrollView: {fileID: 316903193}
+  autoCompleteItems: []
+  selectionIndex: 0
 --- !u!1001 &3016797084927235067
 PrefabInstance:
   m_ObjectHideFlags: 0

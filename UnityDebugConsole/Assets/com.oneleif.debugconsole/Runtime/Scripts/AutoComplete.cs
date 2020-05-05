@@ -11,8 +11,8 @@ namespace Oneleif.debugconsole
         [SerializeField] private RectTransform autoCompleteItemPrefab;
         [SerializeField] private RectTransform autocompleteScrollView;
 
-        public List<AutoCompleteItem> autoCompleteItems;
-        public int selectionIndex;
+        private List<AutoCompleteItem> autoCompleteItems;
+        private int selectionIndex;
 
         void Start()
         {
