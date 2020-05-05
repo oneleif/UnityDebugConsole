@@ -22,7 +22,7 @@ namespace Oneleif.debugconsole
         private FileLogger fileLogger;
 
         private List<string> cachedCommands;
-        private int currentCacheIndex;
+        public int currentCacheIndex;
 
         enum CacheDirection
         {
@@ -128,10 +128,6 @@ namespace Oneleif.debugconsole
                 currentCacheIndex = cachedCommands.Count;
                 SetupInputField();
             }
-            else
-            {
-                consoleInput.DeactivateInputField();
-            }
         }
 
         private void LogMessage(string message)
@@ -142,18 +138,23 @@ namespace Oneleif.debugconsole
 
         private void SetupInputField()
         {
-            ClearInputField(consoleInput);
-            consoleInput.text = string.Empty;
-            consoleInput.Select();
-            consoleInput.ActivateInputField();
-
             consoleInput.onEndEdit.RemoveAllListeners();
+            consoleInput.onValueChanged.RemoveAllListeners();
+
+            ClearInputField(consoleInput);
+
             consoleInput.onEndEdit.AddListener(delegate
             { ProcessCommand(consoleInput); });
 
-            consoleInput.onValueChanged.RemoveAllListeners();
             consoleInput.onValueChanged.AddListener(delegate
             { ShowCommandAutoComplete(consoleInput); });
+        }
+
+        private void ClearInputField(InputField consoleInput)
+        {
+            consoleInput.text = string.Empty;
+            consoleInput.Select();
+            consoleInput.ActivateInputField();
         }
 
         public void ShowCommandAutoComplete(InputField consoleInput)
@@ -163,9 +164,13 @@ namespace Oneleif.debugconsole
 
         public void ProcessCommand(InputField consoleInput)
         {
+            if(consoleInput.text == "`" || string.IsNullOrEmpty(consoleInput.text))
+            {
+                return;
+            }
+
             (ConsoleCommand command, string[] args) = GetCommandFromInput(consoleInput.text);
             LogMessage(ConsoleConstants.commandPrefix + consoleInput.text);
-            ClearInputField(consoleInput);
             if (command != null)
             {
                 command.Process(args);
@@ -174,6 +179,11 @@ namespace Oneleif.debugconsole
             {
                 Debug.LogWarning("Command not recognized");
             }
+
+            // Add command to cache and reset the field
+            cachedCommands.Add(consoleInput.text);
+            currentCacheIndex = cachedCommands.Count;
+            ClearInputField(consoleInput);
         }
 
         private (ConsoleCommand, string[]) GetCommandFromInput(string input)
@@ -200,13 +210,6 @@ namespace Oneleif.debugconsole
 
             return null;
         }
-        private void ClearInputField(InputField consoleInput)
-        {
-            consoleInput.text = string.Empty;
-            consoleInput.Select();
-            consoleInput.ActivateInputField();
-        }
-
 
         private void MoveCache(CacheDirection direction)
         {
@@ -218,7 +221,10 @@ namespace Oneleif.debugconsole
                     {
                         currentCacheIndex--;
                         consoleInput.text = cachedCommands[currentCacheIndex];
-
+                    }
+                    else if(currentCacheIndex == 0)
+                    {
+                        consoleInput.text = cachedCommands[currentCacheIndex];
                     }
                 }
                 else if (direction == CacheDirection.down)
