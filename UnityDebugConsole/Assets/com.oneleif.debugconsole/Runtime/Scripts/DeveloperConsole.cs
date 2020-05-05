@@ -127,8 +127,11 @@ namespace Oneleif.debugconsole
 
             if (Input.GetKeyDown(KeyCode.Tab))
             {
-                consoleInput.text = autoComplete.GetAutoCompleteCommand();
-                consoleInput.MoveTextEnd(false);
+                if (autoComplete.AutoCompleteHasItems())
+                {
+                    consoleInput.text = autoComplete.GetAutoCompleteCommand();
+                    consoleInput.MoveTextEnd(false);
+                }
             }
         }
 
