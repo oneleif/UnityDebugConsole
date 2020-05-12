@@ -26,6 +26,16 @@ namespace Oneleif.debugconsole
             return autoCompleteItems[selectionIndex].ConsoleCommand.Command;
         }
 
+        public void Hide()
+        {
+            autocompleteScrollView.gameObject.SetActive(false);
+        }
+
+        public void Show()
+        {
+            autocompleteScrollView.gameObject.SetActive(true);
+        }
+
         public void ClearResults()
         {
             foreach (Transform child in autocompleteParent)
@@ -64,12 +74,15 @@ namespace Oneleif.debugconsole
 
             if (foundValidCommand)
             {
-                autocompleteScrollView.gameObject.SetActive(true);
-                HighlightSelection();
+                Show();
+            }
+            else
+            {
+                Hide();
             }
         }
 
-        public bool AutoCompleteHasItems()
+        public bool HasItems()
         {
             return autoCompleteItems.Count > 0;
         }
@@ -95,14 +108,21 @@ namespace Oneleif.debugconsole
             HighlightSelection();
         }
 
-        private void UnhighlightSelection()
+        public void UnhighlightSelection()
         {
-            autoCompleteItems[selectionIndex].Unhighlight();
+            if (HasItems())
+            {
+                autoCompleteItems[selectionIndex].Unhighlight();
+
+            }
         }
 
-        private void HighlightSelection()
+        public void HighlightSelection()
         {
-            autoCompleteItems[selectionIndex].Highlight();
+            if (HasItems())
+            {
+                autoCompleteItems[selectionIndex].Highlight();
+            }
         }
     }
 }

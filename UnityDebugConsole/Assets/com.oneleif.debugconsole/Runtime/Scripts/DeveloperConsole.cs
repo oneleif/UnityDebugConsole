@@ -12,6 +12,11 @@ namespace Oneleif.debugconsole
         up, down, none
     }
 
+    public enum FocusSelection 
+    {
+        Cache, AutoComplete
+    }
+
     public class DeveloperConsole : MonoBehaviour
     {
         [SerializeField] public ConsoleCommand[] commands;
@@ -29,7 +34,8 @@ namespace Oneleif.debugconsole
         private List<string> cachedCommands;
         private int currentCacheIndex;
 
-        
+        private FocusSelection focusSelection;
+
 
         #region Singleton
 
@@ -61,6 +67,7 @@ namespace Oneleif.debugconsole
             autoComplete = GetComponentInChildren<AutoComplete>();
             fileLogger = GetComponent<FileLogger>();
             cachedCommands = new List<string>();
+            focusSelection = FocusSelection.Cache;
         }
 
         private void OnEnable()
@@ -112,25 +119,48 @@ namespace Oneleif.debugconsole
                 return;
             }
 
-            SelectionDirection inputSelectionDirection = GetInputSelectionDirection();
-            if(inputSelectionDirection != SelectionDirection.none)
+            HandleFocusInteraction();
+        }
+
+        private void HandleFocusInteraction()
+        {
+            // Change focus selection
+            if (Input.GetKeyDown(KeyCode.Tab))
             {
-                if (autoComplete.AutoCompleteHasItems())
+                if (focusSelection == FocusSelection.AutoComplete)
                 {
-                    autoComplete.SelectResult(inputSelectionDirection);
+                    autoComplete.UnhighlightSelection();
+                    focusSelection = FocusSelection.Cache;
+                }
+                else
+                {
+                    autoComplete.HighlightSelection();
+                    focusSelection = FocusSelection.AutoComplete;
+                }
+            }
+
+            SelectionDirection inputSelectionDirection = GetInputSelectionDirection();
+
+            // Perform interaction on focused element
+            if (inputSelectionDirection != SelectionDirection.none)
+            {
+                if (focusSelection == FocusSelection.AutoComplete)
+                {
+                    if (autoComplete.HasItems())
+                    {
+                        consoleInput.onValueChanged.RemoveAllListeners();
+
+                        autoComplete.SelectResult(inputSelectionDirection);
+                        consoleInput.text = autoComplete.GetAutoCompleteCommand();
+                        consoleInput.MoveTextEnd(false);
+
+                        consoleInput.onValueChanged.AddListener(delegate
+                        { ShowCommandAutoComplete(consoleInput); });
+                    }
                 }
                 else
                 {
                     MoveCache(inputSelectionDirection);
-                }
-            }
-
-            if (Input.GetKeyDown(KeyCode.Tab))
-            {
-                if (autoComplete.AutoCompleteHasItems())
-                {
-                    consoleInput.text = autoComplete.GetAutoCompleteCommand();
-                    consoleInput.MoveTextEnd(false);
                 }
             }
         }
