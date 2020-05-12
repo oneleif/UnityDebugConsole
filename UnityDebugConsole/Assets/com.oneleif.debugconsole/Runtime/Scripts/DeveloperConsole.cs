@@ -249,6 +249,7 @@ namespace Oneleif.debugconsole
             cachedCommands.Add(consoleInput.text);
             currentCacheIndex = cachedCommands.Count;
             ClearInputField(consoleInput);
+            focusSelection = FocusSelection.Cache;
         }
 
         private (ConsoleCommand, string[]) GetCommandFromInput(string input)
