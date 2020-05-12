@@ -134,8 +134,12 @@ namespace Oneleif.debugconsole
                 }
                 else
                 {
-                    autoComplete.HighlightSelection();
-                    focusSelection = FocusSelection.AutoComplete;
+                    // Don't change focus if the menu isn't open
+                    if (autoComplete.HasItems())
+                    {
+                        autoComplete.HighlightSelection();
+                        focusSelection = FocusSelection.AutoComplete;
+                    }
                 }
             }
 
