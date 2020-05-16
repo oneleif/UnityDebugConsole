@@ -7,37 +7,35 @@ using UnityEngine.UI;
 
 namespace Oneleif.debugconsole
 {
+    public enum SelectionDirection
+    {
+        up, down, none
+    }
+
+    public enum FocusSelection 
+    {
+        Cache, AutoComplete
+    }
+
     public class DeveloperConsole : MonoBehaviour
     {
-        [Header("Options")]
-        public KeyCode toggleKey = KeyCode.BackQuote;
-        public bool shouldLogToFile = false;
-        public bool shouldOutputDebugLogs = false;
-        [SerializeField] private string commandPrefix = string.Empty;
-        [SerializeField] private string userInputPrefix = "> ";
-        [SerializeField] private ConsoleCommand[] commands = new ConsoleCommand[0];
+        [SerializeField] public ConsoleCommand[] commands;
 
         [Header("UI Components")]
         [SerializeField] private Canvas consoleCanvas;
         [SerializeField] private Text consoleText;
         [SerializeField] private InputField consoleInput;
 
-        // Console props
         private bool consoleIsActive = false;
 
-        // Constants
-        private string logFileName = "log.txt";
-        private bool addTimestamp = true;
-
-        private StreamWriter OutputStream;
+        private AutoComplete autoComplete;
+        private FileLogger fileLogger;
 
         private List<string> cachedCommands;
         private int currentCacheIndex;
 
-        enum CacheDirection
-        {
-            up, down
-        }
+        private FocusSelection focusSelection;
+
 
         #region Singleton
 
@@ -66,38 +64,26 @@ namespace Oneleif.debugconsole
         private void Start()
         {
             consoleCanvas.gameObject.SetActive(consoleIsActive);
+            autoComplete = GetComponentInChildren<AutoComplete>();
+            fileLogger = GetComponent<FileLogger>();
             cachedCommands = new List<string>();
-
-            if (shouldLogToFile)
-            {
-                // Outputs to: C:\Users\<your-user>\AppData\LocalLow\DefaultCompany\UnityDebugConsole\log.txt
-                string logFilePath = Path.Combine(Application.persistentDataPath, logFileName);
-                OutputStream = new StreamWriter(logFilePath, false);
-                // TODO: clear old log files if they're too big
-            }
+            focusSelection = FocusSelection.Cache;
         }
 
         private void OnEnable()
         {
-            if (shouldOutputDebugLogs)
+            if (ConsoleConstants.shouldOutputDebugLogs)
             {
                 Application.logMessageReceived += HandleLog;
-
             }
         }
 
         private void OnDisable()
         {
-            if (shouldOutputDebugLogs)
+            if (ConsoleConstants.shouldOutputDebugLogs)
             {
                 Application.logMessageReceived -= HandleLog;
             }
-        }
-
-        private void OnDestroy()
-        {
-            OutputStream.Close();
-            OutputStream = null;
         }
 
         private void HandleLog(string logMessage, string stackTrace, LogType type)
@@ -108,9 +94,11 @@ namespace Oneleif.debugconsole
                 case LogType.Error:
                     color = "red";
                     break;
+
                 case LogType.Warning:
                     color = "yellow";
                     break;
+
                 case LogType.Log:
                     color = "white";
                     break;
@@ -121,23 +109,79 @@ namespace Oneleif.debugconsole
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.BackQuote))
+            if (Input.GetKeyDown(ConsoleConstants.toggleKey))
             {
                 ToggleConsole();
             }
 
-            if (consoleIsActive)
+            if (!consoleIsActive)
             {
-                if (Input.GetKeyDown(KeyCode.UpArrow))
-                {
-                    MoveCache(CacheDirection.up);
-                }
+                return;
+            }
 
-                if (Input.GetKeyDown(KeyCode.DownArrow))
+            HandleFocusInteraction();
+        }
+
+        private void HandleFocusInteraction()
+        {
+            // Change focus selection
+            if (Input.GetKeyDown(KeyCode.Tab))
+            {
+                if (focusSelection == FocusSelection.AutoComplete)
                 {
-                    MoveCache(CacheDirection.down);
+                    autoComplete.UnhighlightSelection();
+                    focusSelection = FocusSelection.Cache;
+                }
+                else
+                {
+                    // Don't change focus if the menu isn't open
+                    if (autoComplete.HasItems())
+                    {
+                        autoComplete.HighlightSelection();
+                        focusSelection = FocusSelection.AutoComplete;
+                    }
                 }
             }
+
+            SelectionDirection inputSelectionDirection = GetInputSelectionDirection();
+
+            // Perform interaction on focused element
+            if (inputSelectionDirection != SelectionDirection.none)
+            {
+                if (focusSelection == FocusSelection.AutoComplete)
+                {
+                    if (autoComplete.HasItems())
+                    {
+                        consoleInput.onValueChanged.RemoveAllListeners();
+
+                        autoComplete.SelectResult(inputSelectionDirection);
+                        consoleInput.text = autoComplete.GetAutoCompleteCommand();
+                        consoleInput.MoveTextEnd(false);
+
+                        consoleInput.onValueChanged.AddListener(delegate
+                        { ShowCommandAutoComplete(consoleInput); });
+                    }
+                }
+                else
+                {
+                    MoveCache(inputSelectionDirection);
+                }
+            }
+        }
+
+        private SelectionDirection GetInputSelectionDirection()
+        {
+            if (Input.GetKeyDown(KeyCode.UpArrow))
+            {
+                return SelectionDirection.up;
+            }
+
+            if (Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                return SelectionDirection.down;
+            }
+
+            return SelectionDirection.none;
         }
 
         private void ToggleConsole()
@@ -149,131 +193,107 @@ namespace Oneleif.debugconsole
                 currentCacheIndex = cachedCommands.Count;
                 SetupInputField();
             }
-            else
-            {
-                consoleInput.DeactivateInputField();
-            }
         }
 
         private void LogMessage(string message)
         {
             consoleText.text += message + "\n";
-
-            if (shouldLogToFile)
-            {
-                LogToFile(message);
-            }
+            fileLogger.LogToFile(message);
         }
 
-        private void LogToFile(string message)
-        {
-            if (addTimestamp)
-            {
-                DateTime now = DateTime.Now;
-                message = string.Format("[{0:H:mm:ss}] {1}", now, message);
-            }
-
-            if (OutputStream != null)
-            {
-                OutputStream.WriteLine(message);
-                OutputStream.Flush();
-            }
-        }
-        
         private void SetupInputField()
+        {
+            consoleInput.onEndEdit.RemoveAllListeners();
+            consoleInput.onValueChanged.RemoveAllListeners();
+
+            ClearInputField(consoleInput);
+
+            consoleInput.onEndEdit.AddListener(delegate
+            { ProcessCommand(consoleInput); });
+
+            consoleInput.onValueChanged.AddListener(delegate
+            { ShowCommandAutoComplete(consoleInput); });
+        }
+
+        private void ClearInputField(InputField consoleInput)
         {
             consoleInput.text = string.Empty;
             consoleInput.Select();
             consoleInput.ActivateInputField();
-
-            consoleInput.onEndEdit.RemoveAllListeners();
-            consoleInput.onEndEdit.AddListener(delegate { ProcessCommand(consoleInput); });
-
-            consoleInput.onValueChanged.RemoveAllListeners();
-            consoleInput.onValueChanged.AddListener(delegate { ShowCommandAutoComplete(consoleInput); });
         }
 
         public void ShowCommandAutoComplete(InputField consoleInput)
         {
-
+            autoComplete.FillResults(consoleInput);
         }
 
         public void ProcessCommand(InputField consoleInput)
         {
-            string inputValue = consoleInput.text;
-
-            if(inputValue.Contains("`"))
+            if(consoleInput.text == "`" || string.IsNullOrEmpty(consoleInput.text))
             {
                 return;
             }
 
-            // Print the user's input
-            LogMessage(userInputPrefix + inputValue);
-
-            if (!inputValue.StartsWith(commandPrefix))
+            (ConsoleCommand command, string[] args) = GetCommandFromInput(consoleInput.text);
+            LogMessage(ConsoleConstants.commandPrefix + consoleInput.text);
+            if (command != null)
+            {
+                command.Process(args);
+            }
+            else
             {
                 Debug.LogWarning("Command not recognized");
-                return;
             }
 
-            // Remove prefix from the command string
-            inputValue = inputValue.Remove(0, commandPrefix.Length);
+            // Add command to cache and reset the field
+            cachedCommands.Add(consoleInput.text);
+            currentCacheIndex = cachedCommands.Count;
+            ClearInputField(consoleInput);
+            focusSelection = FocusSelection.Cache;
+        }
 
+        private (ConsoleCommand, string[]) GetCommandFromInput(string input)
+        {
             // Split command from arguments
-            string[] inputSplit = inputValue.Split(' ');
+            string[] inputSplit = input.Split(' ');
 
             string commandInput = inputSplit[0];
             string[] commandArguments = inputSplit.Skip(1).ToArray();
 
-            if (!Array.Exists(commands, command => command.Command.Equals(commandInput, StringComparison.OrdinalIgnoreCase)))
-            {
-                Debug.LogWarning("Command not recognized");
-            }
-            else
-            {
-                ProcessCommand(commandInput, commandArguments);
-            }
-
-
-            // Add command to cache and reset the field
-            cachedCommands.Add(inputValue);
-            currentCacheIndex = cachedCommands.Count;
-            consoleInput.text = string.Empty;
-            consoleInput.ActivateInputField();
-            consoleInput.Select();
+            ConsoleCommand command = GetValidCommand(commandInput);
+            return (command, commandArguments);
         }
 
-        public void ProcessCommand(string commandInput, string[] args)
+        public ConsoleCommand GetValidCommand(string inputCommand)
         {
             foreach (var command in commands)
             {
-                if (!commandInput.Equals(command.Command, StringComparison.OrdinalIgnoreCase))
+                if(command.Command == inputCommand)
                 {
-                    continue;
-                }
-
-                if (command.Process(args))
-                {
-                    return;
+                    return command;
                 }
             }
+
+            return null;
         }
 
-
-        private void MoveCache(CacheDirection direction)
+        private void MoveCache(SelectionDirection direction)
         {
             if(cachedCommands.Count > 0)
             {
-                if (direction == CacheDirection.up)
+                if (direction == SelectionDirection.up)
                 {
                     if (currentCacheIndex > 0)
                     {
                         currentCacheIndex--;
                         consoleInput.text = cachedCommands[currentCacheIndex];
-
+                    }
+                    else if(currentCacheIndex == 0)
+                    {
+                        consoleInput.text = cachedCommands[currentCacheIndex];
                     }
                 }
-                else if (direction == CacheDirection.down)
+                else if (direction == SelectionDirection.down)
                 {
                     if (currentCacheIndex < cachedCommands.Count - 1)
                     {
