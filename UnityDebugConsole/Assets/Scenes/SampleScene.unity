@@ -454,8 +454,6 @@ MonoBehaviour:
   autoCompleteItemPrefab: {fileID: 5841348260985438925, guid: e2edb3839f4f6904892feab19943d2b4,
     type: 3}
   autocompleteScrollView: {fileID: 316903193}
-  autoCompleteItems: []
-  selectionIndex: 0
 --- !u!1001 &3016797084927235067
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -599,7 +597,7 @@ PrefabInstance:
     - target: {fileID: 3016797084923790194, guid: 966c8a43fe7c3e547bab7b907c52939f,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -489.48227
+      value: -491.46393
       objectReference: {fileID: 0}
     - target: {fileID: 3016797084927235072, guid: 966c8a43fe7c3e547bab7b907c52939f,
         type: 3}

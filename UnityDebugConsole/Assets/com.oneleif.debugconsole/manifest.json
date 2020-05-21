@@ -1,0 +1,15 @@
+{
+	"name": "com.oneleif.debugconsole",
+	"displayName": "UnityDebugConsole",
+	"version": "1.0.1",
+	"unity": "2019.3",
+	"author": "oneleif",
+	"description": "A customizable debug console utilizing scriptable objects",
+	"dependencies": {
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/oneleif/UnityDebugConsole.git",
+		"revision": "17c825559810be95ec71a218a0a42511b331a6bd"
+	}
+}
