@@ -703,7 +703,11 @@ MonoBehaviour:
   autoCompleteItemPrefab: {fileID: 5841348260985438925, guid: e2edb3839f4f6904892feab19943d2b4,
     type: 3}
   autocompleteScrollView: {fileID: 316903193}
---- !u!1 &3016797084923790195
+=======
+  commands: []
+  consoleCanvas: {fileID: 3016797085147515044}
+  consoleText: {fileID: 1608076839}
+  consoleInput: {fileID: 3016797086186141066}
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
