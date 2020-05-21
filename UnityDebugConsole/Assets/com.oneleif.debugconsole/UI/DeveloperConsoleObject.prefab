@@ -117,8 +117,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 301248472}
   m_HandleRect: {fileID: 301248471}
   m_Direction: 2
-  m_Value: 1.000003
-  m_Size: 0.93236685
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -408,7 +408,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1060251669}
-  - component: {fileID: 1060251670}
   m_Layer: 0
   m_Name: AutoCompleteBar
   m_TagString: Untagged
@@ -436,22 +435,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1060251670
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1060251668}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ff6a0b54911726942bb4c79952f2fb22, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  autocompleteParent: {fileID: 1037562739}
-  autoCompleteItemPrefab: {fileID: 5841348260985438925, guid: e2edb3839f4f6904892feab19943d2b4,
-    type: 3}
-  autocompleteScrollView: {fileID: 0}
 --- !u!1 &1608076837
 GameObject:
   m_ObjectHideFlags: 0
@@ -518,10 +501,10 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_FontSize: 20
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 2
     m_MaxSize: 40
     m_Alignment: 0
     m_AlignByGeometry: 0
@@ -648,6 +631,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3016797084799478387}
   - component: {fileID: 3016797084927235072}
+  - component: {fileID: 2147210533}
+  - component: {fileID: 2147210534}
   m_Layer: 0
   m_Name: DeveloperConsoleObject
   m_TagString: Untagged
@@ -682,10 +667,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5ad54dd9a9e4474e8498f30022a0b51, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  commands: []
+  commands:
+  - {fileID: 11400000, guid: 89faed0fc6b67aa4395a1d2951097d21, type: 2}
+  - {fileID: 11400000, guid: 8136e2a13fd44af4282dd7b06a21feae, type: 2}
+  - {fileID: 11400000, guid: 2dd644ea8acec5d4f8cfde5b4a351314, type: 2}
+  - {fileID: 11400000, guid: 280bf12a634dc704494cb084d78eba00, type: 2}
   consoleCanvas: {fileID: 3016797085147515044}
   consoleText: {fileID: 1608076839}
   consoleInput: {fileID: 3016797086186141066}
+--- !u!114 &2147210533
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3016797084799478396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bac7c67e987b6f64d95b5c45580e230c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2147210534
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3016797084799478396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff6a0b54911726942bb4c79952f2fb22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  autocompleteParent: {fileID: 1037562739}
+  autoCompleteItemPrefab: {fileID: 5841348260985438925, guid: e2edb3839f4f6904892feab19943d2b4,
+    type: 3}
+  autocompleteScrollView: {fileID: 316903193}
 --- !u!1 &3016797084923790195
 GameObject:
   m_ObjectHideFlags: 0
@@ -721,7 +738,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.00018310547, y: -489.4826}
+  m_AnchoredPosition: {x: -0.00018310547, y: -613.53827}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &13930634
@@ -1055,7 +1072,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3016797086480675205}
   m_HandleRect: {fileID: 3016797086480675206}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -1164,12 +1181,12 @@ MonoBehaviour:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
     m_FontSize: 20
     m_FontStyle: 0
-    m_BestFit: 0
+    m_BestFit: 1
     m_MinSize: 2
     m_MaxSize: 40
     m_Alignment: 3
     m_AlignByGeometry: 0
-    m_RichText: 0
+    m_RichText: 1
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
